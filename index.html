@@ -183,14 +183,30 @@
   .tab{
     flex:1;background:none;border:none;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;gap:3px;
-    padding:7px 2px;color:var(--muted);font-size:12px;font-weight:600;border-radius:10px;
+    padding:7px 1px;color:var(--muted);font-size:11px;font-weight:600;border-radius:10px;
   }
-  .tab svg{width:25px;height:25px}
+  .tab svg{width:23px;height:23px}
   .tab.active{color:var(--green)}
   .tab.active svg{stroke:var(--green)}
   .tab:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
 
   .empty{color:var(--muted);text-align:center;padding:30px 16px;font-size:15px}
+
+  /* Insights screen */
+  .ins-intro{font-size:14px;color:var(--muted);margin:2px 2px 2px;line-height:1.4}
+  .ins-note{font-size:13.5px;color:var(--muted);margin:-4px 4px 9px;line-height:1.45}
+  .bar-row{padding:13px 0;border-bottom:1px solid var(--line)}
+  .bar-row:last-child{border-bottom:none}
+  .bar-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .bar-name{font-weight:700;font-size:16px}
+  .bar-meta{font-size:13px;color:var(--muted);white-space:nowrap}
+  .bar-track{height:11px;background:var(--green-soft);border-radius:6px;overflow:hidden;margin-top:8px}
+  .bar-fill{height:100%;background:var(--green-bright);border-radius:6px}
+  .trend{font-weight:800;font-size:15px;white-space:nowrap}
+  .trend.up{color:var(--green)}
+  .trend.down{color:var(--muted)}
+  .pill-order{display:inline-block;background:var(--blue-soft);color:var(--blue);font-weight:800;font-size:14px;padding:8px 12px;border-radius:10px;white-space:nowrap}
+  .pill-ok{display:inline-block;background:var(--green-soft);color:var(--green);font-weight:800;font-size:14px;padding:8px 12px;border-radius:10px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -305,6 +321,27 @@
         <span>Is this how you keep track of credit now? What is missing here?</span>
       </div>
     </section>
+
+    <!-- INSIGHTS (gap prompt) -->
+    <section id="insights" class="screen">
+      <div class="screen-title">Insights</div>
+      <div class="ins-intro">A sample of what your sales history could tell you, worked out from past sales.</div>
+
+      <div class="block-title">What people buy most</div>
+      <div class="card" id="mostBought" style="padding:4px 16px 10px"></div>
+
+      <div class="block-title">Moving this month</div>
+      <div class="card list" id="trendList"></div>
+
+      <div class="block-title">How much to reorder</div>
+      <div class="ins-note">Based on the last 3 months of sales, so you order what actually moves &mdash; not too much, not too little.</div>
+      <div class="card list" id="stapleList"></div>
+
+      <div class="ask">
+        <strong>Want to see which customers buy what?</strong>
+        <span>Knowing who buys detergent every month means keeping a simple customer list. Is that worth having?</span>
+      </div>
+    </section>
   </main>
 
   <div class="toast" id="toast"></div>
@@ -325,6 +362,10 @@
     <button class="tab" data-tab="suppliers">
       <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M2 6h11v9H2z"/><path d="M13 9h5l3 3v3h-8z"/><circle cx="6" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg>
       Suppliers
+    </button>
+    <button class="tab" data-tab="insights">
+      <svg fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="13"/><line x1="12" y1="20" x2="12" y2="7"/><line x1="18" y1="20" x2="18" y2="10"/></svg>
+      Insights
     </button>
     <button class="tab" data-tab="owed">
       <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M2.5 20c0-3.4 3-5.2 6.5-5.2s6.5 1.8 6.5 5.2"/><path d="M18 8.5v5M15.5 11h5"/></svg>
@@ -368,6 +409,30 @@
     {text:"Sold 4 × Indomie Noodles — carton", time:"Yesterday"}
   ];
 
+  // Insights sample data (would come from real sales history)
+  var mostBought = [
+    {name:"Bottled Water — pack",    times:52, avgQty:4},
+    {name:"Indomie Noodles — carton",times:38, avgQty:3},
+    {name:"Maggi Cubes — carton",    times:31, avgQty:2},
+    {name:"Detergent — carton",      times:27, avgQty:2},
+    {name:"Malt Drink — crate",      times:24, avgQty:2}
+  ];
+  var trending = [
+    {name:"Bottled Water — pack", dir:"up",   pct:24},
+    {name:"Malt Drink — crate",   dir:"up",   pct:18},
+    {name:"Detergent — carton",   dir:"up",   pct:11},
+    {name:"Sardines — carton",    dir:"down", pct:9},
+    {name:"Sugar — 50kg bag",     dir:"down", pct:6}
+  ];
+  // monthly = average units sold per month (3-month average)
+  var staples = [
+    {name:"Detergent — carton",      monthly:24},
+    {name:"Bottled Water — pack",    monthly:180},
+    {name:"Indomie Noodles — carton",monthly:120},
+    {name:"Maggi Cubes — carton",    monthly:60},
+    {name:"Sugar — 50kg bag",        monthly:6}
+  ];
+
   function naira(n){ return "\u20A6" + Math.round(n).toLocaleString("en-NG"); }
   function ddmmyyyy(d){
     function p(x){return (x<10?"0":"")+x;}
@@ -381,6 +446,11 @@
   function lowItems(){
     return products.filter(function(p){ return p.qty <= p.reorder; });
   }
+  function findProduct(name){
+    for(var i=0;i<products.length;i++){ if(products[i].name===name) return products[i]; }
+    return null;
+  }
+  function shortName(name){ return name.split(" \u2014 ")[0]; }
 
   function renderHome(){
     el("storeValue").textContent = naira(stockValue());
@@ -453,6 +523,44 @@
     }).join("");
   }
 
+  function renderInsights(){
+    // What people buy most — frequency bars
+    var max = mostBought[0].times;
+    el("mostBought").innerHTML = mostBought.map(function(m){
+      var w = Math.round(m.times/max*100);
+      return '<div class="bar-row">'+
+        '<div class="bar-top"><span class="bar-name">'+shortName(m.name)+'</span>'+
+        '<span class="bar-meta">'+m.times+' times · avg '+m.avgQty+'</span></div>'+
+        '<div class="bar-track"><div class="bar-fill" style="width:'+w+'%"></div></div></div>';
+    }).join("");
+
+    // Moving this month — up / down vs last month
+    el("trendList").innerHTML = trending.map(function(t){
+      var up = t.dir==="up";
+      var arrow = up ? "\u25B2" : "\u25BC";
+      var word = up ? "% more" : "% less";
+      return '<div class="row"><div class="main"><div class="name">'+shortName(t.name)+'</div></div>'+
+        '<div class="right"><div class="trend '+(up?'up':'down')+'">'+arrow+' '+t.pct+word+'</div></div></div>';
+    }).join("");
+
+    // How much to reorder — demand vs live stock
+    el("stapleList").innerHTML = staples.map(function(s){
+      var p = findProduct(s.name);
+      var stock = p ? p.qty : 0;
+      var unit = p ? p.unit : "";
+      var order = Math.max(0, s.monthly - stock); // ~1 month cover
+      var right = order>0
+        ? '<span class="pill-order">Order ~'+order+'</span>'
+        : '<span class="pill-ok">Enough</span>';
+      var meta = order>0
+        ? 'Sells ~'+s.monthly+' '+unit+'/month · you have '+stock
+        : 'You have '+stock+' '+unit+' · enough for now';
+      return '<div class="row"><div class="icon">'+boxIcon()+'</div>'+
+        '<div class="main"><div class="name">'+shortName(s.name)+'</div><div class="meta">'+meta+'</div></div>'+
+        '<div class="right">'+right+'</div></div>';
+    }).join("");
+  }
+
   function boxIcon(){return '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/></svg>';}
   function truckIcon(){return '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M2 6h11v9H2z"/><path d="M13 9h5l3 3v3h-8z"/><circle cx="6" cy="18" r="1.4"/><circle cx="17" cy="18" r="1.4"/></svg>';}
   function clockIcon(){return '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';}
@@ -471,6 +579,7 @@
     updateSellTotal();
     renderProducts(el("prodSearch").value);
     renderHome();
+    renderInsights();
     toast("Sale recorded · "+naira(amount));
   }
 
@@ -505,6 +614,7 @@
   renderProducts("");
   renderSellOptions();
   renderSuppliers();
+  renderInsights();
 })();
 </script>
 </body>
