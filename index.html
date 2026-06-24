@@ -361,6 +361,10 @@
       <div class="block-title">Moving this month</div>
       <div class="card list" id="trendList"></div>
 
+      <div class="block-title">Slow to sell — worth pushing</div>
+      <div class="ins-note">Sitting longer than usual on a fast-moving shelf. Put them up front or run a small offer to keep stock fresh.</div>
+      <div class="card list" id="slowList"></div>
+
       <div class="block-title">How much to reorder</div>
       <div class="ins-note">Based on the last 3 months of sales, so you order what actually moves &mdash; not too much, not too little.</div>
       <div class="card list" id="stapleList"></div>
@@ -467,6 +471,13 @@
     {name:"Detergent — carton",   dir:"up",   pct:11},
     {name:"Sardines — carton",    dir:"down", pct:9},
     {name:"Sugar — 50kg bag",     dir:"down", pct:6}
+  ];
+  // items sitting too long on a high-turnover shelf (sample)
+  var slowMovers = [
+    {name:"Brown Beans — 50kg bag", days:18},
+    {name:"Tomato Paste — carton",  days:14},
+    {name:"Bar Soap — carton",      days:12},
+    {name:"Semolina — 10kg bag",    days:10}
   ];
   // monthly = average units sold per month (3-month average)
   var staples = [
@@ -647,6 +658,17 @@
       var word = up ? "% more" : "% less";
       return '<div class="row"><div class="main"><div class="name">'+shortName(t.name)+'</div></div>'+
         '<div class="right"><div class="trend '+(up?'up':'down')+'">'+arrow+' '+t.pct+word+'</div></div></div>';
+    }).join("");
+
+    // Slow to sell — sitting too long
+    el("slowList").innerHTML = slowMovers.map(function(s){
+      var p = findProduct(s.name);
+      var stock = p ? p.qty : 0;
+      var unit = p ? p.unit : "";
+      return '<div class="row"><div class="icon warn">'+clockIcon()+'</div>'+
+        '<div class="main"><div class="name">'+shortName(s.name)+'</div>'+
+        '<div class="meta">Last sold '+s.days+' days ago</div></div>'+
+        '<div class="right"><div class="qty">'+stock+'</div><div class="unit">'+unit+' left</div></div></div>';
     }).join("");
 
     // How much to reorder — demand vs live stock
